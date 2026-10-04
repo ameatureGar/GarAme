@@ -25,6 +25,8 @@ function verifyWorkbook(file, expectedMeasurementRows) {
   assert.equal(result.model.grand, 627714.34);
   assert.match(result.html, /PROFORMA INVOICE/);
   assert.match(result.html, /Concreting done by gang by mixture machine/);
+  const door = result.model.block.rows.find((row) => row.kind === "data" && row.cells[1] === "Door");
+  assert.equal(door.cells[0], 2);
   assert.doesNotMatch(result.html, /Bill Abstract/);
   assert.equal((result.html.match(/class="page/g) || []).length, 9);
 }

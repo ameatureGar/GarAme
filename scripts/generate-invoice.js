@@ -265,7 +265,29 @@ function collectMeasure(wb, from, to, { title, cols = 8 }) {
     });
   }
   while (rows.length && rows[rows.length - 1].kind === "spacer") rows.pop();
+  fillBlankSerials(rows);
   return { title, rows, cols };
+}
+
+function fillBlankSerials(rows) {
+  let serial = 0;
+  for (const row of rows) {
+    if (row.kind === "section" || row.kind === "header") {
+      serial = 0;
+      continue;
+    }
+    if (row.kind !== "data") continue;
+    const particular = String(row.cells[1] ?? "").trim();
+    if (!particular || /^total/i.test(particular)) continue;
+    const existing = row.cells[0];
+    if (existing !== "" && existing != null) {
+      const parsed = Number(existing);
+      if (Number.isFinite(parsed)) serial = parsed;
+      continue;
+    }
+    serial += 1;
+    row.cells[0] = serial;
+  }
 }
 
 function invoicePage(model) {
