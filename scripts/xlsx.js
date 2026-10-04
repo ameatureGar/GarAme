@@ -1,7 +1,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { execFileSync } = require("child_process");
+const AdmZip = require("adm-zip");
 
 function colRow(ref) {
   const m = ref.match(/^([A-Z]+)(\d+)$/);
@@ -54,9 +54,8 @@ function parseSheet(xml, strings) {
 }
 
 function extractXlsx(xlsxPath, destDir) {
-  const zipPath = path.join(destDir, "book.zip");
-  fs.copyFileSync(xlsxPath, zipPath);
-  execFileSync("tar", ["-xf", zipPath, "-C", destDir], { windowsHide: true });
+  const zip = new AdmZip(xlsxPath);
+  zip.extractAllTo(destDir, true);
 }
 
 function loadWorkbook(xlsxPath) {
