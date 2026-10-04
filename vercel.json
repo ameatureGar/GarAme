@@ -1,8 +1,0 @@
-{
-  "functions": {
-    "server.js": {
-      "includeFiles": "{public,assets,data}/**",
-      "maxDuration": 60
-    }
-  }
-}
