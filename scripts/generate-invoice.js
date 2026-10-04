@@ -85,7 +85,6 @@ function buildModel(wb) {
   }
 
   const items = [];
-  const abstractRows = [];
   for (let r = abstractHeader + 1; r <= Math.min(abstractHeader + 50, wb.maxRow); r++) {
     const desc = String(wb.cell(r, 2) || "").trim();
     if (!desc) {
@@ -97,8 +96,6 @@ function buildModel(wb) {
     const totalRate = num(wb.cell(r, 5));
     const presentQtyRaw = num(wb.cell(r, 7));
     const presentRate = num(wb.cell(r, 8)) ?? totalRate;
-    const balanceQty = num(wb.cell(r, 10));
-    const balanceRate = num(wb.cell(r, 11)) ?? totalRate;
     const presentQty = presentQtyRaw == null ? null : r2(presentQtyRaw);
     const presentAmt = presentQty == null ? 0 : r2(presentQty * presentRate);
     if (!unit || totalQty == null || totalRate == null || presentQtyRaw == null) continue;
@@ -110,20 +107,6 @@ function buildModel(wb) {
       qty: presentQty,
       rate: presentRate,
       amount: presentAmt,
-    });
-    abstractRows.push({
-      sl,
-      desc,
-      unit,
-      totalQty,
-      totalRate,
-      totalAmt: totalQty != null && totalRate != null ? r2(totalQty * totalRate) : num(wb.cell(r, 6)),
-      presentQty,
-      presentRate,
-      presentAmt,
-      balanceQty: balanceQty == null ? null : r2(balanceQty),
-      balanceRate,
-      balanceAmt: balanceQty != null && balanceRate != null ? r2(r2(balanceQty) * balanceRate) : num(wb.cell(r, 12)),
     });
   }
   if (!items.length) {
@@ -191,7 +174,7 @@ function buildModel(wb) {
     cols: 9,
   });
 
-  return { items, abstractRows, taxable, cgst, sgst, grand, block, plaster, steel, earth };
+  return { items, taxable, cgst, sgst, grand, block, plaster, steel, earth };
 }
 
 function normalized(value) {
@@ -423,54 +406,6 @@ function invoicePage(model) {
   </section>`;
 }
 
-function abstractPage(model) {
-  const body = model.abstractRows
-    .map(
-      (r) => `<tr>
-      <td class="c">${r.sl}</td>
-      <td>${esc(r.desc)}</td>
-      <td>${esc(r.unit)}</td>
-      <td class="r">${qty(r.totalQty)}</td>
-      <td class="r">${plain(r.totalRate)}</td>
-      <td class="r">${money(r.totalAmt)}</td>
-      <td class="r">${qty(r.presentQty)}</td>
-      <td class="r">${plain(r.presentRate)}</td>
-      <td class="r">${money(r.presentAmt)}</td>
-      <td class="r">${qty(r.balanceQty)}</td>
-      <td class="r">${plain(r.balanceRate)}</td>
-      <td class="r">${money(r.balanceAmt)}</td>
-    </tr>`
-    )
-    .join("");
-  const tot = (key) => r2(model.abstractRows.reduce((s, r) => s + (Number(r[key]) || 0), 0));
-  return `<section class="page">
-    <h2>Bill Abstract</h2>
-    <p class="sub">${esc(subLine())}</p>
-    <table class="grid compact">
-      <tr class="peach">
-        <th></th><th></th><th></th>
-        <th colspan="3">Total QTS</th>
-        <th colspan="3">Present QTS</th>
-        <th colspan="3">Balance QTS</th>
-      </tr>
-      <tr class="peach">
-        <th>Sl. No</th><th>Description</th><th>Unit</th>
-        <th>Quantity</th><th>Rate</th><th>Amount</th>
-        <th>Quantity</th><th>Rate</th><th>Amount</th>
-        <th>Quantity</th><th>Rate</th><th>Amount</th>
-      </tr>
-      ${body}
-      <tr class="b">
-        <td></td><td></td><td></td>
-        <td></td><td class="r">TOTAL</td><td class="r">${money(tot("totalAmt"))}</td>
-        <td></td><td class="r">TOTAL</td><td class="r">${money(tot("presentAmt"))}</td>
-        <td></td><td class="r">TOTAL</td><td class="r">${money(tot("balanceAmt"))}</td>
-      </tr>
-    </table>
-    <p class="note">Present QTS is billed on this proforma. Balance QTS = Total QTS − Present QTS.</p>
-  </section>`;
-}
-
 function subLine() {
   return `Annexure to ${meta.title} No. ${meta.invoiceNo} dated ${meta.invoiceDate} | ${meta.workName}`;
 }
@@ -637,7 +572,6 @@ function htmlDoc(model) {
 </div>
 <div class="sheet">
 ${invoicePage(model)}
-${abstractPage(model)}
 ${measurePages(model.block)}
 ${measurePages(model.plaster)}
 ${measurePages(model.steel)}

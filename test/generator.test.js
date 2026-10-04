@@ -25,7 +25,8 @@ function verifyWorkbook(file, expectedMeasurementRows) {
   assert.equal(result.model.grand, 627714.34);
   assert.match(result.html, /PROFORMA INVOICE/);
   assert.match(result.html, /Concreting done by gang by mixture machine/);
-  assert.equal((result.html.match(/class="page/g) || []).length, 10);
+  assert.doesNotMatch(result.html, /Bill Abstract/);
+  assert.equal((result.html.match(/class="page/g) || []).length, 9);
 }
 
 test("generates the approved invoice from the original workbook", () => {
