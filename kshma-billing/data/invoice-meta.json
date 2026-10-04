@@ -1,0 +1,32 @@
+{
+  "title": "PROFORMA INVOICE",
+  "invoiceNo": "10003",
+  "invoiceDate": "19.09.2026",
+  "workName": "Bill copy of harsha (RAB 2)",
+  "seller": {
+    "name": "Kshma Group & Co",
+    "address1": "Opp to townhall post office chikkaballapur",
+    "address2": "rural near town hall, Chikkaballapur, Karnataka-562101",
+    "gstin": "29BFIPG7451M1ZW",
+    "mobile": "8971113077",
+    "email": "harshagurram33@gmail.com"
+  },
+  "billTo": {
+    "name": "BEST GOLDEN DEVELOPERS PRIVATE LIMITED",
+    "address1": "No 8, Opposite APMC Yard, NH-4, TUMKUR ROAD, YESHWANTHOUR, Bengaluru",
+    "address2": "(Bangalore) Urban, Karnataka -560022",
+    "gstin": "29AAECB8050A2ZY",
+    "placeOfSupply": "Karnataka",
+    "mobile": "99001972588",
+    "pan": "AAECB8050A"
+  },
+  "bank": {
+    "bank": "RBL Bank",
+    "name": "Kshma Group and Co",
+    "ifsc": "RATN0000289",
+    "account": "408971113077",
+    "branch": "Brookefields Branch"
+  },
+  "gstRate": 0.09,
+  "signatory": "for Kshma Group & Co"
+}

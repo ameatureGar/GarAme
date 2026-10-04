@@ -1,0 +1,11 @@
+{
+  "name": "kshma-billing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generate Kshma Group proforma invoices and annexures on official letterhead",
+  "scripts": {
+    "start": "node scripts/server.js",
+    "generate": "node scripts/generate-invoice.js",
+    "test": "node --test"
+  }
+}

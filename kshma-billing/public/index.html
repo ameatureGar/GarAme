@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kshma Billing</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Kshma Billing</div>
+    <div class="product">Excel to invoice</div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">Generate a bill from Excel</h1>
+      <p>Upload a measurement workbook to create the proforma invoice and annexure pages.</p>
+    </section>
+
+    <section class="upload" id="drop-zone" aria-label="Upload Excel workbook">
+      <input id="file-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      <button class="button button-primary" id="choose-button" type="button">Choose Excel file</button>
+      <p>or drag and drop your file here</p>
+      <span>XLSX up to 20 MB</span>
+    </section>
+
+    <section class="progress-panel" id="progress" hidden aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <div>
+        <strong>Reading workbook and preparing invoice</strong>
+        <p id="progress-name"></p>
+      </div>
+    </section>
+
+    <section class="summary" id="summary" hidden aria-live="polite">
+      <div class="file-summary">
+        <strong id="file-name"></strong>
+        <p>Workbook processed successfully.</p>
+        <span>The invoice and annexure pages are ready.</span>
+      </div>
+      <dl>
+        <div><dt>Bill items</dt><dd id="bill-items"></dd></div>
+        <div><dt>Measurement rows</dt><dd id="measurement-rows"></dd></div>
+        <div><dt>Taxable value</dt><dd id="taxable"></dd></div>
+        <div><dt>Grand total</dt><dd id="grand"></dd></div>
+      </dl>
+    </section>
+
+    <section class="result" id="result" hidden>
+      <div>
+        <h2>Invoice generated successfully</h2>
+        <p>Proforma invoice and annexure pages are ready.</p>
+      </div>
+      <div class="actions">
+        <a class="button button-primary" id="view-link" target="_blank" rel="noopener">View invoice</a>
+        <a class="button button-secondary" id="print-link" target="_blank" rel="noopener">Print / Save PDF</a>
+      </div>
+    </section>
+
+    <section class="error" id="error" hidden role="alert">
+      <h2>Unable to process the workbook</h2>
+      <p id="error-message"></p>
+      <ul id="error-details"></ul>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
