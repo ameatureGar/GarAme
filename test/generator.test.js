@@ -29,7 +29,17 @@ function verifyWorkbook(file, expectedMeasurementRows) {
   assert.equal(door.cells[0], 2);
   assert.doesNotMatch(result.html, /Bill Abstract/);
   assert.equal((result.html.match(/class="page/g) || []).length, 9);
+  assert.match(result.html, /<td class="c">10003<\/td>/);
 }
+
+test("uses a manually entered invoice number", () => {
+  const { createInvoiceFromWorkbook } = require("../scripts/generate-invoice");
+  const result = createInvoiceFromWorkbook(original, { invoiceNo: "PI/204" });
+  assert.equal(result.invoiceNo, "PI/204");
+  assert.match(result.html, /<td class="c">PI\/204<\/td>/);
+  assert.match(result.html, /No\. PI\/204 dated/);
+  assert.doesNotMatch(result.html, /<td class="c">10003<\/td>/);
+});
 
 test("generates the approved invoice from the original workbook", () => {
   verifyWorkbook(original, 366);

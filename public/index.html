@@ -18,6 +18,11 @@
       <p>Upload a measurement workbook to create the proforma invoice and annexure pages.</p>
     </section>
 
+    <section class="invoice-fields">
+      <label for="invoice-no">Invoice number</label>
+      <input id="invoice-no" name="invoiceNo" type="text" inputmode="text" maxlength="40" autocomplete="off" spellcheck="false" value="10003" required>
+    </section>
+
     <section class="upload" id="drop-zone" aria-label="Upload Excel workbook">
       <input id="file-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       <button class="button button-primary" id="choose-button" type="button">Choose Excel file</button>
@@ -36,7 +41,7 @@
     <section class="summary" id="summary" hidden aria-live="polite">
       <div class="file-summary">
         <strong id="file-name"></strong>
-        <p>Workbook processed successfully.</p>
+        <p>Invoice <span id="used-invoice-no"></span> processed successfully.</p>
         <span>The invoice and annexure pages are ready.</span>
       </div>
       <dl>

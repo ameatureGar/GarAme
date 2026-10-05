@@ -4,6 +4,19 @@ const { loadWorkbook } = require("./xlsx");
 
 const ROOT = path.join(__dirname, "..");
 const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "invoice-meta.json"), "utf8"));
+const INVOICE_NO_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 .\/_-]{0,39}$/;
+
+function resolveInvoiceNo(value) {
+  const trimmed = String(value ?? "").trim();
+  if (!trimmed) return meta.invoiceNo;
+  if (!INVOICE_NO_PATTERN.test(trimmed)) {
+    throw Object.assign(
+      new Error("Enter an invoice number using letters, numbers, spaces, or - / _ ."),
+      { status: 400 }
+    );
+  }
+  return trimmed;
+}
 
 class WorkbookFormatError extends Error {
   constructor(message, details = []) {
@@ -290,8 +303,8 @@ function fillBlankSerials(rows) {
   }
 }
 
-function invoicePage(model) {
-  const { seller, billTo, bank } = meta;
+function invoicePage(model, details = meta) {
+  const { seller, billTo, bank } = details;
   const itemRows = model.items
     .map(
       (it) => `<tr>
@@ -305,9 +318,9 @@ function invoicePage(model) {
     </tr>`
     )
     .join("");
-  const pct = `${meta.gstRate * 100}%`;
+  const pct = `${details.gstRate * 100}%`;
   return `<section class="page">
-    <h1>${esc(meta.title)}</h1>
+    <h1>${esc(details.title)}</h1>
     <table class="box invoice">
       <colgroup>
         <col style="width:6%"><col style="width:36%"><col style="width:8%">
@@ -328,8 +341,8 @@ function invoicePage(model) {
       </tr>
       <tr>
         <td colspan="3"></td>
-        <td class="c">${esc(meta.invoiceNo)}</td>
-        <td class="c">${esc(meta.invoiceDate)}</td>
+        <td class="c">${esc(details.invoiceNo)}</td>
+        <td class="c">${esc(details.invoiceDate)}</td>
         <td></td>
         <td></td>
       </tr>
@@ -417,7 +430,7 @@ function invoicePage(model) {
         </td>
         <td colspan="2" class="c signbox">
           <div class="mt2">Authorised Signatory</div>
-          <div>${esc(meta.signatory)}</div>
+          <div>${esc(details.signatory)}</div>
         </td>
         <td class="c signbox nar">
           <div class="mt2">Receiver's</div>
@@ -428,11 +441,11 @@ function invoicePage(model) {
   </section>`;
 }
 
-function subLine() {
-  return `Annexure to ${meta.title} No. ${meta.invoiceNo} dated ${meta.invoiceDate} | ${meta.workName}`;
+function subLine(details = meta) {
+  return `Annexure to ${details.title} No. ${details.invoiceNo} dated ${details.invoiceDate} | ${details.workName}`;
 }
 
-function measurePages(sheet) {
+function measurePages(sheet, details = meta) {
   const colCount = sheet.cols || 8;
   const hdr = ["SL NO", "PARTICULAR", "NOS", "LENGTH", "BREADTH", "HEIGHT", "QUANTITY", "REMARKS", "UNIT"];
   const chunks = paginateMeasureRows(sheet.rows, 58);
@@ -480,7 +493,7 @@ function measurePages(sheet) {
       }
       return `<section class="page measure-page">
     <h2>${esc(sheet.title)}</h2>
-    <p class="sub">${esc(subLine())}</p>
+    <p class="sub">${esc(subLine(details))}</p>
     <table class="grid compact measure">
       ${colgroup}
       ${lines.join("\n")}
@@ -577,39 +590,40 @@ tr.gap td { border-left: none; border-right: none; height: 6px; }
 }`;
 }
 
-function htmlDoc(model) {
+function htmlDoc(model, details = meta) {
   const bg = letterheadDataUri();
   return `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8"/>
-<title>${esc(meta.title)} ${esc(meta.invoiceNo)}</title>
+<title>${esc(details.title)} ${esc(details.invoiceNo)}</title>
 <style>${css(bg)}</style>
 </head>
 <body>
 <div class="toolbar">
   <strong>Kshma billing</strong>
-  <span>Invoice ${esc(meta.invoiceNo)} — print on A4, background graphics on</span>
+  <span>Invoice ${esc(details.invoiceNo)} — print on A4, background graphics on</span>
   <button onclick="window.print()">Print / Save PDF</button>
 </div>
 <div class="sheet">
-${invoicePage(model)}
-${measurePages(model.block)}
-${measurePages(model.plaster)}
-${measurePages(model.steel)}
-${measurePages(model.earth)}
+${invoicePage(model, details)}
+${measurePages(model.block, details)}
+${measurePages(model.plaster, details)}
+${measurePages(model.steel, details)}
+${measurePages(model.earth, details)}
 </div>
 </body>
 </html>`;
 }
 
-function createInvoiceFromWorkbook(workbookPath) {
+function createInvoiceFromWorkbook(workbookPath, options = {}) {
   if (!fs.existsSync(workbookPath)) {
     throw new Error(`Workbook not found: ${workbookPath}`);
   }
+  const details = { ...meta, invoiceNo: resolveInvoiceNo(options.invoiceNo) };
   const wb = loadWorkbook(workbookPath);
   const model = buildModel(wb);
-  return { model, html: htmlDoc(model) };
+  return { model, html: htmlDoc(model, details), invoiceNo: details.invoiceNo };
 }
 
 function main() {
@@ -637,5 +651,7 @@ module.exports = {
   buildModel,
   createInvoiceFromWorkbook,
   htmlDoc,
+  meta,
   money,
+  resolveInvoiceNo,
 };

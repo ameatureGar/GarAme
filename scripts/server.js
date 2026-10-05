@@ -3,7 +3,7 @@ const http = require("http");
 const os = require("os");
 const path = require("path");
 const { randomUUID } = require("crypto");
-const { WorkbookFormatError, createInvoiceFromWorkbook } = require("./generate-invoice");
+const { WorkbookFormatError, createInvoiceFromWorkbook, meta, resolveInvoiceNo } = require("./generate-invoice");
 
 const ROOT = path.join(__dirname, "..");
 const PUBLIC = path.join(ROOT, "public");
@@ -43,6 +43,19 @@ function readUpload(req) {
   });
 }
 
+function readHeader(req, name) {
+  const raw = req.headers[name];
+  if (raw == null || raw === "") return undefined;
+  try {
+    return decodeURIComponent(String(raw));
+  } catch {
+    throw Object.assign(
+      new Error("Enter an invoice number using letters, numbers, spaces, or - / _ ."),
+      { status: 400 }
+    );
+  }
+}
+
 function measurementRowCount(model) {
   return [model.block, model.plaster, model.steel, model.earth]
     .flatMap((section) => section.rows).length;
@@ -54,11 +67,22 @@ function createBillingServer() {
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost");
 
+    if (req.method === "GET" && url.pathname === "/api/defaults") {
+      return json(res, 200, { invoiceNo: meta.invoiceNo });
+    }
+
     if (req.method === "POST" && url.pathname === "/api/generate") {
       const filename = decodeURIComponent(String(req.headers["x-filename"] || ""));
       const contentType = String(req.headers["content-type"] || "").toLowerCase();
       if (!filename.toLowerCase().endsWith(".xlsx") || !contentType.includes("spreadsheetml")) {
         return json(res, 415, { error: "Please upload an XLSX workbook." });
+      }
+
+      let invoiceNo;
+      try {
+        invoiceNo = resolveInvoiceNo(readHeader(req, "x-invoice-no"));
+      } catch (error) {
+        return json(res, error.status || 400, { error: error.message });
       }
 
       let tempFile;
@@ -69,7 +93,7 @@ function createBillingServer() {
         }
         tempFile = path.join(os.tmpdir(), `kshma-upload-${randomUUID()}.xlsx`);
         fs.writeFileSync(tempFile, data);
-        const result = createInvoiceFromWorkbook(tempFile);
+        const result = createInvoiceFromWorkbook(tempFile, { invoiceNo });
         const id = randomUUID();
         invoices.set(id, { html: result.html, createdAt: Date.now() });
         while (invoices.size > 20) invoices.delete(invoices.keys().next().value);
@@ -80,6 +104,7 @@ function createBillingServer() {
           printUrl: `/invoice/${id}?print=1`,
           summary: {
             filename,
+            invoiceNo: result.invoiceNo,
             billItems: result.model.items.length,
             measurementRows: measurementRowCount(result.model),
             taxable: result.model.taxable,
